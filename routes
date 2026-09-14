@@ -1,0 +1,72 @@
+const express = require("express");
+const router = express.Router();
+let students = require("../data");
+
+// GET /students - Fetch all students (200 OK)
+router.get("/", (req, res) => {
+  res.status(200).json({ success: true, data: students });
+});
+
+// GET /students/:id - Fetch single student by ID (200 OK / 404 Not Found)
+router.get("/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const student = students.find((s) => s.id === id);
+
+  if (!student) {
+    return res.status(404).json({ success: false, message: "Student Not Found" });
+  }
+
+  res.status(200).json({ success: true, data: student });
+});
+
+// POST /students - Create new student record (201 Created / 400 Bad Request)
+router.post("/", (req, res) => {
+  const { name, course } = req.body;
+
+  if (!name || !course) {
+    return res.status(400).json({ success: false, message: "Invalid Input: Name and course are required" });
+  }
+
+  const newStudent = {
+    id: students.length ? students[students.length - 1].id + 1 : 1,
+    name,
+    course
+  };
+
+  students.push(newStudent);
+  res.status(201).json({ success: true, data: newStudent });
+});
+
+// PUT /students/:id - Update student record (200 OK / 400 Bad Request / 404 Not Found)
+router.put("/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const { name, course } = req.body;
+
+  const index = students.findIndex((s) => s.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: "Student Not Found" });
+  }
+
+  if (!name || !course) {
+    return res.status(400).json({ success: false, message: "Invalid Input: Name and course are required" });
+  }
+
+  students[index] = { id, name, course };
+  res.status(200).json({ success: true, data: students[index] });
+});
+
+// DELETE /students/:id - Remove student (200 OK / 404 Not Found)
+router.delete("/:id", (req, res) => {
+  const id = parseInt(req.params.id, 10);
+  const index = students.findIndex((s) => s.id === id);
+
+  if (index === -1) {
+    return res.status(404).json({ success: false, message: "Student Not Found" });
+  }
+
+  const deletedStudent = students.splice(index, 1)[0];
+  res.status(200).json({ success: true, data: deletedStudent, message: "Student deleted successfully" });
+});
+
+module.exports = router;
